@@ -511,18 +511,6 @@ export default function GoalsScreen() {
                 )}
               </GlassCard>
 
-              {/* Custom Date Picker */}
-              {showDatePicker && (
-                <DateTimePicker
-                  value={formData.deadline}
-                  mode="date"
-                  display="default"
-                  onChange={handleDateChange}
-                  minimumDate={new Date()}
-                  style={styles.datePicker}
-                />
-              )}
-
               {/* Daily Target */}
               <View style={styles.formRow}>
                 <View style={[styles.formSection, { flex: 2 }]}>
