@@ -28,7 +28,6 @@ const quickDeadlines = [
   { label: '90 Days', days: 90 },
   { label: '6 Months', days: 180 },
   { label: '1 Year', days: 365 },
-  { label: 'Custom', days: null }
 ];
 
 export default function GoalsScreen() {
@@ -37,7 +36,7 @@ export default function GoalsScreen() {
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedQuickDeadline, setSelectedQuickDeadline] = useState<number | null>(30);
+  const [selectedQuickDeadline, setSelectedQuickDeadline] = useState<number>(30);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -50,6 +49,7 @@ export default function GoalsScreen() {
   const handleAddGoal = () => {
     setEditingGoal(null);
     setSelectedQuickDeadline(30);
+    setShowDatePicker(false);
     setFormData({
       name: '',
       description: '',
@@ -63,7 +63,8 @@ export default function GoalsScreen() {
 
   const handleEditGoal = (goal: Goal) => {
     setEditingGoal(goal);
-    setSelectedQuickDeadline(null); // Custom date for existing goals
+    setSelectedQuickDeadline(0); // Custom date for existing goals
+    setShowDatePicker(false);
     setFormData({
       name: goal.name,
       description: goal.description || '',
@@ -75,24 +76,32 @@ export default function GoalsScreen() {
     setShowModal(true);
   };
 
-  const handleQuickDeadlineSelect = (days: number | null) => {
+  const handleQuickDeadlineSelect = (days: number) => {
     setSelectedQuickDeadline(days);
-    if (days !== null) {
+    if (days > 0) {
       const newDeadline = new Date();
       newDeadline.setDate(newDeadline.getDate() + days);
       setFormData(prev => ({ ...prev, deadline: newDeadline }));
+    } else {
+      // Custom date selected
+      setShowDatePicker(true);
     }
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
+    setShowDatePicker(false);
     
     if (selectedDate) {
       setFormData(prev => ({ ...prev, deadline: selectedDate }));
-      setSelectedQuickDeadline(null); // Mark as custom when date is manually selected
+      setSelectedQuickDeadline(0); // Mark as custom when date is manually selected
     }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setShowDatePicker(false);
+    setSelectedQuickDeadline(30);
+    setEditingGoal(null);
   };
 
   const handleSaveGoal = () => {
@@ -128,7 +137,7 @@ export default function GoalsScreen() {
       } else {
         addGoal(goalData);
       }
-      setShowModal(false);
+      handleModalClose();
     } catch (error) {
       Alert.alert('Error', 'Failed to save goal. Please try again.');
     }
@@ -339,12 +348,12 @@ export default function GoalsScreen() {
         visible={showModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowModal(false)}
+        onRequestClose={handleModalClose}
       >
         <View style={[styles.modalContainer, { backgroundColor: colors.primary }]}>
           <SafeAreaView style={styles.modalSafeArea}>
             <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
+              <TouchableOpacity onPress={handleModalClose}>
                 <Text style={[styles.cancelButton, { color: colors.accent }]}>Cancel</Text>
               </TouchableOpacity>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -455,6 +464,29 @@ export default function GoalsScreen() {
                       </Text>
                     </TouchableOpacity>
                   ))}
+                  <TouchableOpacity
+                    style={[
+                      styles.deadlineChip,
+                      {
+                        backgroundColor: selectedQuickDeadline === 0 
+                          ? colors.accent 
+                          : colors.secondary,
+                        borderColor: colors.accent
+                      }
+                    ]}
+                    onPress={() => handleQuickDeadlineSelect(0)}
+                  >
+                    <Text style={[
+                      styles.deadlineChipText,
+                      { 
+                        color: selectedQuickDeadline === 0 
+                          ? colors.primary 
+                          : colors.text 
+                      }
+                    ]}>
+                      Custom
+                    </Text>
+                  </TouchableOpacity>
                 </ScrollView>
               </View>
 
@@ -466,7 +498,7 @@ export default function GoalsScreen() {
                     {formatDeadlineDate(formData.deadline)}
                   </Text>
                 </View>
-                {selectedQuickDeadline === null && (
+                {selectedQuickDeadline === 0 && (
                   <TouchableOpacity 
                     style={styles.customDateButton}
                     onPress={() => setShowDatePicker(true)}
@@ -480,12 +512,41 @@ export default function GoalsScreen() {
 
               {/* Custom Date Picker */}
               {showDatePicker && (
+                  minimumDate={new Date()}
+          presentationStyle="pageSheet"
+          onRequestClose={handleCloseDatePicker}
+        >
+          <View style={[styles.datePickerContainer, { backgroundColor: colors.primary }]}>
+            <SafeAreaView style={styles.datePickerSafeArea}>
+              <View style={styles.datePickerHeader}>
+                <TouchableOpacity onPress={handleCloseDatePicker}>
+                  <Text style={[styles.cancelButton, { color: colors.accent }]}>Cancel</Text>
+                </TouchableOpacity>
+                <Text style={[styles.datePickerTitle, { color: colors.text }]}>
+                  Select Deadline
+                </Text>
+                <TouchableOpacity onPress={() => {
+                  setShowDatePicker(false);
+                }}>
+                  <Text style={[styles.saveButton, { color: colors.accent }]}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.datePickerContent}>
                 <DateTimePicker
                   value={formData.deadline}
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={handleDateChange}
                   minimumDate={new Date()}
+                  style={styles.datePicker}
+                  textColor={colors.text}
+                />
+              </View>
+            </SafeAreaView>
+          </View>
+        </Modal>
+      )}
                   style={styles.datePicker}
                 />
               )}
@@ -800,6 +861,30 @@ const styles = StyleSheet.create({
   },
   datePicker: {
     marginVertical: 16,
+  },
+  datePickerContainer: {
+    flex: 1,
+  },
+  datePickerSafeArea: {
+    flex: 1,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  datePickerTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+  },
+  datePickerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   modalBottomPadding: {
     height: 40,
