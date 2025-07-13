@@ -48,6 +48,8 @@ export default function GoalsScreen() {
     setEditingGoal(null);
     setSelectedQuickDeadline(30);
     setShowDatePicker(false);
+    setShowDatePicker(false);
+    setShowDatePicker(false);
     setFormData({
       name: '',
       description: '',
@@ -62,6 +64,8 @@ export default function GoalsScreen() {
   const handleEditGoal = (goal: Goal) => {
     setEditingGoal(goal);
     setSelectedQuickDeadline(0); // Custom date for existing goals
+    setShowDatePicker(false);
+    setShowDatePicker(false);
     setShowDatePicker(false);
     setFormData({
       name: goal.name,
@@ -83,19 +87,32 @@ export default function GoalsScreen() {
     } else {
       // Custom date selected
       setShowDatePicker(true);
+    } else {
+      // Custom date selected
+      setShowDatePicker(true);
+    } else {
+      // Custom date selected
+      setShowDatePicker(true);
     }
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
-    if (selectedDate) {
-      setFormData(prev => ({ ...prev, deadline: selectedDate }));
-      setSelectedQuickDeadline(0); // Mark as custom when date is manually selected
     }
   };
 
-  const handleCloseDatePicker = () => {
+  const handleModalClose = () => {
+    setShowModal(false);
     setShowDatePicker(false);
+      setSelectedQuickDeadline(0); // Mark as custom when date is manually selected
+    setEditingGoal(null);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setShowDatePicker(false);
+      setSelectedQuickDeadline(0); // Mark as custom when date is manually selected
+    setEditingGoal(null);
   };
 
   const handleModalClose = () => {
@@ -488,6 +505,52 @@ export default function GoalsScreen() {
                       Custom
                     </Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.deadlineChip,
+                      {
+                        backgroundColor: selectedQuickDeadline === 0 
+                          ? colors.accent 
+                          : colors.secondary,
+                        borderColor: colors.accent
+                      }
+                    ]}
+                    onPress={() => handleQuickDeadlineSelect(0)}
+                  >
+                    <Text style={[
+                      styles.deadlineChipText,
+                      { 
+                        color: selectedQuickDeadline === 0 
+                          ? colors.primary 
+                          : colors.text 
+                      }
+                    ]}>
+                      Custom
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.deadlineChip,
+                      {
+                        backgroundColor: selectedQuickDeadline === 0 
+                          ? colors.accent 
+                          : colors.secondary,
+                        borderColor: colors.accent
+                      }
+                    ]}
+                    onPress={() => handleQuickDeadlineSelect(0)}
+                  >
+                    <Text style={[
+                      styles.deadlineChipText,
+                      { 
+                        color: selectedQuickDeadline === 0 
+                          ? colors.primary 
+                          : colors.text 
+                      }
+                    ]}>
+                      Custom
+                    </Text>
+                  </TouchableOpacity>
                 </ScrollView>
               </View>
 
@@ -510,6 +573,37 @@ export default function GoalsScreen() {
                   </TouchableOpacity>
                 )}
               </GlassCard>
+
+              {/* Custom Date Picker */}
+              {showDatePicker && (
+            <SafeAreaView style={styles.datePickerSafeArea}>
+              <View style={styles.datePickerHeader}>
+                <TouchableOpacity onPress={handleCloseDatePicker}>
+                  <Text style={[styles.cancelButton, { color: colors.accent }]}>Cancel</Text>
+                </TouchableOpacity>
+                <Text style={[styles.datePickerTitle, { color: colors.text }]}>
+                  Select Deadline
+                </Text>
+                <TouchableOpacity onPress={() => {
+                  setShowDatePicker(false);
+                }}>
+                  <Text style={[styles.saveButton, { color: colors.accent }]}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.datePickerContent}>
+                  minimumDate={new Date()}
+                  style={styles.datePicker}
+                  textColor={colors.text}
+                />
+              </View>
+            </SafeAreaView>
+          </View>
+        </Modal>
+      )}
+                  style={styles.datePicker}
+                />
+              )}
 
               {/* Daily Target */}
               <View style={styles.formRow}>
@@ -547,42 +641,6 @@ export default function GoalsScreen() {
 
               <View style={styles.modalBottomPadding} />
             </ScrollView>
-          </SafeAreaView>
-        </View>
-      </Modal>
-
-      {/* Date Picker Modal */}
-      <Modal
-        visible={showDatePicker}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handleCloseDatePicker}
-      >
-        <View style={[styles.datePickerContainer, { backgroundColor: colors.primary }]}>
-          <SafeAreaView style={styles.datePickerSafeArea}>
-            <View style={styles.datePickerHeader}>
-              <TouchableOpacity onPress={handleCloseDatePicker}>
-                <Text style={[styles.cancelButton, { color: colors.accent }]}>Cancel</Text>
-              </TouchableOpacity>
-              <Text style={[styles.datePickerTitle, { color: colors.text }]}>
-                Select Deadline
-              </Text>
-              <TouchableOpacity onPress={handleCloseDatePicker}>
-                <Text style={[styles.saveButton, { color: colors.accent }]}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.datePickerContent}>
-              <DateTimePicker
-                value={formData.deadline}
-                mode="date"
-                display="spinner"
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-                style={styles.datePicker}
-                textColor={colors.text}
-              />
-            </View>
           </SafeAreaView>
         </View>
       </Modal>
